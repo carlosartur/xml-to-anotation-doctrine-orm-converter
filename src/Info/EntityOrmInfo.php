@@ -136,4 +136,14 @@ class EntityOrmInfo
         $namespace = str_replace('\\', '/', $this->entityClassName);
         return "src/{$namespace}.php";
     }
+
+    public static function getClassDocRegex()
+    {
+        return '#\/\*\*(((.)+\n{0,})|(\n){0,}(.+\n))\s{0,}\*\/(?=\n\s{0,}((class\s+([a-zA-Z])+)))#';
+    }
+
+    public static function getClassRegex()
+    {
+        return '#(class\s+([a-zA-Z])+)#';
+    }
 }

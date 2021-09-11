@@ -60,8 +60,18 @@ class Standardizer
 
             $entityCode = $this->updateFields($entityOrmInfo, $entityCode);
 
+            $entityCode = $this->updateClassAttributes($entityOrmInfo, $entityCode);
+
             file_put_contents("{$this->path}/{$entityOrmInfo->getFilePath()}", $entityCode);
         }
+    }
+
+    private function updateClassAttributes(EntityOrmInfo $entityOrmInfo, string $entityCode): string
+    {
+        if (preg_match(EntityOrmInfo::getClassDocRegex(), $entityCode)) {
+            return preg_replace(EntityOrmInfo::getClassDocRegex(), (string) $entityOrmInfo, $entityCode);
+        }
+        return preg_replace(EntityOrmInfo::getClassRegex(), $entityOrmInfo . PHP_EOL . '$0', $entityCode);
     }
 
     private function updateFields(EntityOrmInfo $entityOrmInfo, string $entityCode): string
@@ -88,13 +98,6 @@ class Standardizer
             $entityCode = implode(PHP_EOL, $entityFirstPiece) . PHP_EOL
                 . $field->buildClassProperty() . PHP_EOL
                 . $entityFooter;
-
-            // $pattern = '#(\n{1,}(?=(\s+(public|protected|private)\s(\w|\$)+)))#';
-            // if (preg_match($pattern, $entityCode)) {
-            //     [$classDefinition, $functionsDefinition] = preg_split($pattern, $entityCode, 2);
-            //     $entityCode = $classDefinition . $field->buildClassProperty() . $functionsDefinition;
-            //     continue;
-            // }
         }
         return $entityCode;
     }
@@ -105,7 +108,7 @@ class Standardizer
         $lineForProperty = 0;
         $isClassDefinitionLineFound = false;
         foreach ($entityCodeLineByLine as $lineNumber => $line) {
-            if (preg_match('#(class\s+([a-zA-Z])+)#', $line)) {
+            if (preg_match(EntityOrmInfo::getClassRegex(), $line)) {
                 $isClassDefinitionLineFound = true;
                 $lineForProperty = $lineNumber + 2;
             }
