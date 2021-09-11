@@ -64,7 +64,7 @@ class Standardizer
         }
     }
 
-    public function updateFields(EntityOrmInfo $entityOrmInfo, string $entityCode): string
+    private function updateFields(EntityOrmInfo $entityOrmInfo, string $entityCode): string
     {
         foreach ($entityOrmInfo->getFields() as $field) {
             if (preg_match($field->getPropertyDocRegex(), $entityCode)) {
@@ -77,13 +77,44 @@ class Standardizer
                 continue;
             }
 
-            $pattern = '#(\n{1,}(?=(\s+(public|protected|private)\s(\w|\$)+)))#';
-            if (preg_match($pattern, $entityCode)) {
-                [$classDefinition, $functionsDefinition] = preg_split($pattern, $entityCode, 2);
-                $entityCode = "{$classDefinition}{$field->buildClassProperty()}{$functionsDefinition}";
-                continue;
-            }
+            $entityCodeLineByLine = explode(PHP_EOL, $entityCode);
+            $bestLineToInsertProperty = $this->findFirstDisponibleLineForProperty($entityCodeLineByLine);
+
+            $entityPieces = array_chunk($entityCodeLineByLine, $bestLineToInsertProperty);
+            $entityFirstPiece = array_shift($entityPieces);
+
+            $entityFooter = implode(PHP_EOL, array_map(fn ($item) => implode(PHP_EOL, $item), $entityPieces));
+
+            $entityCode = implode(PHP_EOL, $entityFirstPiece) . PHP_EOL
+                . $field->buildClassProperty() . PHP_EOL
+                . $entityFooter;
+
+            // $pattern = '#(\n{1,}(?=(\s+(public|protected|private)\s(\w|\$)+)))#';
+            // if (preg_match($pattern, $entityCode)) {
+            //     [$classDefinition, $functionsDefinition] = preg_split($pattern, $entityCode, 2);
+            //     $entityCode = $classDefinition . $field->buildClassProperty() . $functionsDefinition;
+            //     continue;
+            // }
         }
         return $entityCode;
+    }
+
+
+    private function findFirstDisponibleLineForProperty(array $entityCodeLineByLine): int
+    {
+        $lineForProperty = 0;
+        $isClassDefinitionLineFound = false;
+        foreach ($entityCodeLineByLine as $lineNumber => $line) {
+            if (preg_match('#(class\s+([a-zA-Z])+)#', $line)) {
+                $isClassDefinitionLineFound = true;
+                $lineForProperty = $lineNumber + 2;
+            }
+
+            if ($isClassDefinitionLineFound && preg_match('#(use\s+[a-zA-Z\\\d]+)\;#', $line)) {
+                $lineForProperty = $lineNumber + 1;
+            }
+        }
+
+        return $lineForProperty;
     }
 }

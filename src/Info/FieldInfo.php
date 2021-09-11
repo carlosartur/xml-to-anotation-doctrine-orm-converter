@@ -74,7 +74,7 @@ class FieldInfo
 
     public function buildClassProperty(): string
     {
-        return '\n    ' . $this . '\n    private $' . $this->getName() . ';';
+        return "\n    " . $this . "\n    private \$" . $this->getName() . ';';
     }
 
     /**

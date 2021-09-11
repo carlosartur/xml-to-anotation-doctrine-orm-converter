@@ -18,7 +18,7 @@ class IdInfo extends FieldInfo
 
     public function __toString()
     {
-        return "    /**
+        return "/**
      * @ORM\Column(type=\"integer\")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy=\"{$this->generator->strategy}\")
