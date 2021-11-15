@@ -6,6 +6,8 @@ use SimpleXMLElement;
 
 class FieldInfo
 {
+    use AnnotationAttributesTrait;
+
     /** @var string $name */
     protected string $name;
 
@@ -19,16 +21,16 @@ class FieldInfo
     protected ?int $length;
 
     /** @var bool $nullable */
-    protected bool $nullable = true;
+    protected ?bool $nullable = true;
 
     /** @var bool $unique */
-    protected bool $unique = false;
+    protected ?bool $unique = false;
 
-    /** @var bool $precision */
-    protected int $precision = 0;
+    /** @var int $precision */
+    protected ?int $precision = 0;
 
     /** @var int $scale */
-    protected int $scale = 0;
+    protected ?int $scale = 0;
 
     public function __construct(SimpleXMLElement $simpleXMLElement)
     {
@@ -37,28 +39,32 @@ class FieldInfo
 
         $this->name = $fieldInfo['name'];
         $this->column = $fieldInfo['column'];
-        $this->type = $fieldInfo['type'] ?? 'string';
-        $this->scale = $fieldInfo['scale'] ?? 0;
-        $this->unique = $fieldInfo['unique'] ?? false;
-        $this->precision = $fieldInfo['precision'] ?? 0;
+        $this->type = $fieldInfo['type'] ?? null;
+        $this->scale = $fieldInfo['scale'] ?? null;
+        $this->precision = $fieldInfo['precision'] ?? null;
+
         $this->length = isset($fieldInfo['length'])
             ? (int) $fieldInfo['length']
             : null;
 
+        $this->unique = isset($fieldInfo['unique'])
+            ? filter_var($fieldInfo['unique'], FILTER_VALIDATE_BOOL)
+            : null;
+
         $this->nullable = isset($fieldInfo['nullable'])
             ? filter_var($fieldInfo['nullable'], FILTER_VALIDATE_BOOL)
-            : true;
+            : null;
+    }
+
+    public function getAnnotationClassName(): string
+    {
+        return "@ORM\Column";
     }
 
     public function __toString(): string
     {
-        $length = $this->length ? ", length={$this->length}" : '';
-        $nullable = $this->nullable ? "true" : "false";
-        $scale = $this->scale ? ", scale={$this->scale}" : '';
-        $unique = $this->unique ? ", unique=true" : '';
-        $precision = $this->precision ? ", precision={$this->precision}" : '';
         return "/**
-     * @ORM\Column(name=\"{$this->column}\", type=\"{$this->type}\", nullable={$nullable}{$length}{$scale}{$unique}{$precision})
+     * {$this->serializeAnnotation()}
      */";
     }
 

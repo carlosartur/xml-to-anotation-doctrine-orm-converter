@@ -51,8 +51,11 @@ class Standardizer
 
     public function startStandardization()
     {
-        foreach ($this->ormFiles as $ormFile) {
-            Output::info("Starting standardization for file {$ormFile}");
+        $totalFiles = count($this->ormFiles);
+        foreach ($this->ormFiles as $key => $ormFile) {
+            $numberFile = $key + 1;
+            Output::info("File #{$numberFile} of {$totalFiles} file name: {$ormFile}");
+
             $fileContent = file_get_contents($ormFile);
             $entityOrmInfo = new EntityOrmInfo($fileContent);
 
@@ -101,7 +104,6 @@ class Standardizer
         }
         return $entityCode;
     }
-
 
     private function findFirstDisponibleLineForProperty(array $entityCodeLineByLine): int
     {

@@ -38,8 +38,15 @@ class EntityOrmInfo
             $fieldInfo = new FieldInfo($field);
             $this->addField($fieldInfo);
         }
-        $this->addField(new IdInfo($entityInfo['id']));
-        Output::default(print_r($this, true));
+
+        foreach ($entityInfo['many-to-one'] as $field) {
+            $fieldInfo = new ManyToOne($field);
+            $this->addField($fieldInfo);
+        }
+
+        if ($entityInfo['id']) {
+            $this->addField(new IdInfo($entityInfo['id']));
+        }
     }
 
     /**
