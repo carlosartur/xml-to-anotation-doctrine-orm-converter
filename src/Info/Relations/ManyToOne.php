@@ -1,7 +1,8 @@
 <?php
 
-namespace Info;
+namespace Info\Relations;
 
+use Info\AnnotationAttributesTrait;
 use SimpleXMLElement;
 
 class ManyToOne extends AbstractRelation

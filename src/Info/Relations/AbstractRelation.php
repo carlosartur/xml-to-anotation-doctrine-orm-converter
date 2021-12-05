@@ -1,7 +1,9 @@
 <?php
 
-namespace Info;
+namespace Info\Relations;
 
+use Info\Fields\FieldInfo;
+use Info\Fields\JoinColumn;
 use SimpleXMLElement;
 
 abstract class AbstractRelation extends FieldInfo

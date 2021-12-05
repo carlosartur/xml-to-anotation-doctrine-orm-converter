@@ -3,6 +3,9 @@
 namespace Info;
 
 use DOMDocument;
+use Info\Fields\FieldInfo;
+use Info\Fields\IdInfo;
+use Info\Relations\ManyToOne;
 use Main\Output;
 
 class EntityOrmInfo

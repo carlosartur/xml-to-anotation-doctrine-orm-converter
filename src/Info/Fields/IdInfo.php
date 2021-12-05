@@ -1,6 +1,6 @@
 <?php
 
-namespace Info;
+namespace Info\Fields;
 
 use SimpleXMLElement;
 
