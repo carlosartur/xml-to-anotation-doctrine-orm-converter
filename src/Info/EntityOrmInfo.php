@@ -5,8 +5,11 @@ namespace Info;
 use DOMDocument;
 use Info\Fields\FieldInfo;
 use Info\Fields\IdInfo;
+use Info\Relations\ManyToMany;
 use Info\Relations\ManyToOne;
+use Info\Relations\OneToMany;
 use Main\Output;
+use SimpleXMLElement;
 
 class EntityOrmInfo
 {
@@ -37,19 +40,44 @@ class EntityOrmInfo
             ->setTable($entityInfo['@attributes']['table'])
             ->setRepositoryClass($entityInfo['@attributes']['repository-class']);
 
-        foreach ($entityInfo['field'] as $field) {
+        foreach ($this->getElementsArray($entityInfo, 'field') as $field) {
             $fieldInfo = new FieldInfo($field);
             $this->addField($fieldInfo);
         }
 
-        foreach ($entityInfo['many-to-one'] as $field) {
+        foreach ($this->getElementsArray($entityInfo, 'many-to-one') as $field) {
             $fieldInfo = new ManyToOne($field);
+            $this->addField($fieldInfo);
+        }
+
+        foreach ($this->getElementsArray($entityInfo, 'one-to-many') as $field) {
+            $fieldInfo = new OneToMany($field);
+            $this->addField($fieldInfo);
+        }
+
+        foreach ($this->getElementsArray($entityInfo, 'many-to-many') as $field) {
+            $fieldInfo = new ManyToMany($field);
             $this->addField($fieldInfo);
         }
 
         if ($entityInfo['id']) {
             $this->addField(new IdInfo($entityInfo['id']));
         }
+    }
+
+    /**
+     * Get element list, or a array with only one element if only one element is find
+     *
+     * @param array $entityInfo
+     * @param string $name
+     * @return array
+     */
+    private function getElementsArray(array $entityInfo, string $name): array
+    {
+        if (!is_array($entityInfo[$name])) {
+            return [$entityInfo[$name]];
+        }
+        return $entityInfo[$name];
     }
 
     /**
