@@ -32,6 +32,12 @@ class EntityOrmInfo
         $this->buildInformation($dom);
     }
 
+    /**
+     * 
+     * 
+     * @param DOMDocument $dom
+     * @return void
+     */
     public function buildInformation(DOMDocument $dom)
     {
         $entityInfo = simplexml_import_dom($dom);
@@ -40,22 +46,22 @@ class EntityOrmInfo
             ->setTable($entityInfo['@attributes']['table'])
             ->setRepositoryClass($entityInfo['@attributes']['repository-class']);
 
-        foreach ($this->getElementsArray($entityInfo, 'field') as $field) {
+        foreach (self::getElementsArray($entityInfo, 'field') as $field) {
             $fieldInfo = new FieldInfo($field);
             $this->addField($fieldInfo);
         }
 
-        foreach ($this->getElementsArray($entityInfo, 'many-to-one') as $field) {
+        foreach (self::getElementsArray($entityInfo, 'many-to-one') as $field) {
             $fieldInfo = new ManyToOne($field);
             $this->addField($fieldInfo);
         }
 
-        foreach ($this->getElementsArray($entityInfo, 'one-to-many') as $field) {
+        foreach (self::getElementsArray($entityInfo, 'one-to-many') as $field) {
             $fieldInfo = new OneToMany($field);
             $this->addField($fieldInfo);
         }
 
-        foreach ($this->getElementsArray($entityInfo, 'many-to-many') as $field) {
+        foreach (self::getElementsArray($entityInfo, 'many-to-many') as $field) {
             $fieldInfo = new ManyToMany($field);
             $this->addField($fieldInfo);
         }
@@ -72,7 +78,7 @@ class EntityOrmInfo
      * @param string $name
      * @return array
      */
-    private function getElementsArray(array $entityInfo, string $name): array
+    public static function getElementsArray(array $entityInfo, string $name): array
     {
         if (!is_array($entityInfo[$name])) {
             return [$entityInfo[$name]];

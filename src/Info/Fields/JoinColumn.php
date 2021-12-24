@@ -28,7 +28,11 @@ class JoinColumn
 
         $this->name = $attributes['name'] ?? null;
         $this->referencedColumnName = $attributes['referenced-column-name'] ?? null;
-        $this->nullable = filter_var($attributes['nullable'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
+        $this->nullable = filter_var(
+            $attributes['nullable'] ?? true,
+            FILTER_VALIDATE_BOOLEAN,
+            FILTER_NULL_ON_FAILURE
+        ) ?? true;
         $this->onDelete = $attributes['on-delete'] ?? null;
         $this->onUpdate = $attributes['on-update'] ?? null;
     }

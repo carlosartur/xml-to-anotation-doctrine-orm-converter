@@ -22,6 +22,8 @@ abstract class AbstractRelation extends FieldInfo
 
     public function __construct(SimpleXMLElement $simpleXmlElement)
     {
+        $this->buildParamsNotIncludedArray();
+
         $simpleXmlElement = (array) $simpleXmlElement;
         $attributes = $simpleXmlElement['@attributes'];
 
