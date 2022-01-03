@@ -10,6 +10,16 @@ class Standardizer
     /** @var string[] */
     private array $ormFiles;
 
+    /** @var string[] */
+    private array $classFiles;
+
+    /**
+     * Undocumented variable
+     *
+     * @var array
+     */
+    private array $classesList;
+
     public function __construct(
         /** @var string $path - Path to project that you want to put on standards */
         private string $path = '',
@@ -25,10 +35,18 @@ class Standardizer
         if (!is_dir($this->path)) {
             throw new Exception("Path \"{$this->path}\" not found.");
         }
-        $this->buildFileList();
+
+        $this->buildTraitsAndClassesList();
+        $this->buildXmlOrmFileList();
     }
 
-    private function buildFileList(?string $currentPath = null)
+    /**
+     * Build list of 'xml' files that should be readen by this software.
+     *
+     * @param string|null $currentPath
+     * @return void
+     */
+    private function buildXmlOrmFileList(?string $currentPath = null)
     {
         $currentPath = $currentPath ?? $this->path;
         foreach (scandir($currentPath) as $subpath) {
@@ -38,7 +56,7 @@ class Standardizer
 
             $completeSubPath = "{$currentPath}/{$subpath}";
             if (is_dir($completeSubPath)) {
-                $this->buildFileList($completeSubPath);
+                $this->buildXmlOrmFileList($completeSubPath);
                 continue;
             }
 
@@ -49,6 +67,43 @@ class Standardizer
         }
     }
 
+    /**
+     * Build list of 'php' files that should be readen by this software.
+     *
+     * @param string|null $currentPath
+     * @return void
+     */
+    private function buildTraitsAndClassesList(?string $currentPath = null)
+    {
+        $currentPath = $currentPath ?? $this->path;
+        foreach (scandir($currentPath) as $subpath) {
+            if (in_array($subpath, ['.', '..'])) {
+                continue;
+            }
+
+            $completeSubPath = "{$currentPath}/{$subpath}";
+            if (is_dir($completeSubPath)) {
+                $this->buildTraitsAndClassesList($completeSubPath);
+                continue;
+            }
+
+            if (false === stripos($completeSubPath, '.php')) {
+                continue;
+            }
+
+            $classFile = new CodeFile($completeSubPath);
+            $this->classFiles[$completeSubPath] = $classFile;
+        }
+        var_dump($this);
+        die;
+    }
+
+
+    /**
+     * Executes Standardization
+     *
+     * @return void
+     */
     public function startStandardization()
     {
         $totalFiles = count($this->ormFiles);
@@ -69,6 +124,13 @@ class Standardizer
         }
     }
 
+    /**
+     * Add orm info to entity class annotation
+     *
+     * @param EntityOrmInfo $entityOrmInfo
+     * @param string $entityCode
+     * @return string
+     */
     private function updateClassAttributes(EntityOrmInfo $entityOrmInfo, string $entityCode): string
     {
         if (preg_match(EntityOrmInfo::getClassDocRegex(), $entityCode)) {
@@ -77,6 +139,13 @@ class Standardizer
         return preg_replace(EntityOrmInfo::getClassRegex(), $entityOrmInfo . PHP_EOL . '$0', $entityCode);
     }
 
+    /**
+     * Add orm info to entity fields annotation
+     *
+     * @param EntityOrmInfo $entityOrmInfo
+     * @param string $entityCode
+     * @return string
+     */
     private function updateFields(EntityOrmInfo $entityOrmInfo, string $entityCode): string
     {
         foreach ($entityOrmInfo->getFields() as $field) {
@@ -105,6 +174,12 @@ class Standardizer
         return $entityCode;
     }
 
+    /**
+     * Find line to add property.
+     *
+     * @param array $entityCodeLineByLine
+     * @return integer
+     */
     private function findFirstDisponibleLineForProperty(array $entityCodeLineByLine): int
     {
         $lineForProperty = 0;

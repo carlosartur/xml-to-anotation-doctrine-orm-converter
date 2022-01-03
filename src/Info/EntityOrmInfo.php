@@ -22,6 +22,9 @@ class EntityOrmInfo
     /** @var string $repositoryClass */
     private string $repositoryClass;
 
+    /** @var bool $hasLifecycleCallbacks */
+    private bool $hasLifecycleCallbacks = false;
+
     /** @var FieldInfo[] */
     private array $fields = [];
 
@@ -42,9 +45,18 @@ class EntityOrmInfo
     {
         $entityInfo = simplexml_import_dom($dom);
         $entityInfo = (array) $entityInfo->entity;
+
         $this->setEntityClassName($entityInfo['@attributes']['name'])
             ->setTable($entityInfo['@attributes']['table'])
-            ->setRepositoryClass($entityInfo['@attributes']['repository-class']);
+            ->setRepositoryClass($entityInfo['@attributes']['repository-class'])
+            ->setHasLifecycleCallbacks($entityInfo['lifecycle-callbacks'] ?? null);
+
+        if ($this->getHasLifecycleCallbacks()) {
+            foreach ($entityInfo['lifecycle-callbacks'] as $lifecycleCallback) {
+                var_dump($lifecycleCallback);
+                die();
+            }
+        }
 
         foreach (self::getElementsArray($entityInfo, 'field') as $field) {
             $fieldInfo = new FieldInfo($field);
@@ -189,5 +201,25 @@ class EntityOrmInfo
     public static function getClassRegex()
     {
         return '#(class\s+([a-zA-Z])+)#';
+    }
+
+    /**
+     * Get the value of hasLifecycleCallbacks
+     */
+    public function getHasLifecycleCallbacks()
+    {
+        return $this->hasLifecycleCallbacks;
+    }
+
+    /**
+     * Set the value of hasLifecycleCallbacks
+     *
+     * @return  self
+     */
+    public function setHasLifecycleCallbacks($hasLifecycleCallbacks)
+    {
+        $this->hasLifecycleCallbacks = (bool) $hasLifecycleCallbacks;
+
+        return $this;
     }
 }
