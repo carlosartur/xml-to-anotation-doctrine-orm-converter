@@ -15,4 +15,4 @@ This is a zero-dependency project
 - relations: cascade
 
 ### License
-[MIT License](https://opensource.org/licenses/MIT)
+[WTFPL](http://www.wtfpl.net/)
