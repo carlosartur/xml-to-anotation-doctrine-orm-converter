@@ -65,7 +65,7 @@ trait AnnotationAttributesTrait
      * @param scalar $value
      * @return string
      */
-    private function getValueString($value): ?string
+    public function getValueString($value): ?string
     {
         if (is_null($value)) {
             return null;

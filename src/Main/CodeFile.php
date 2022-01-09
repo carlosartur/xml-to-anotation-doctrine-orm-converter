@@ -29,7 +29,7 @@ class CodeFile
     private ?string $fatherClass;
 
     /** @var string|null */
-    private ?string $fullQualifiedClassName;
+    private ?string $fullQualifiedClassName = null;
 
     /** @var int */
     private int $classDeclarationLineNumber = 0;
@@ -225,6 +225,26 @@ class CodeFile
     }
 
     /**
+     * Get the value of path
+     */
+    public function getPath(): ?string
+    {
+        return $this->path;
+    }
+
+    /**
+     * Set the value of path
+     *
+     * @return  self
+     */
+    public function setPath(?string $path)
+    {
+        $this->path = $path;
+
+        return $this;
+    }
+
+    /**
      * Get the value of traits
      */
     public function getTraits()
@@ -262,5 +282,25 @@ class CodeFile
         $this->fatherClass = $fatherClass;
 
         return $this;
+    }
+
+    /**
+     * Get code of the file from filesystem
+     *
+     * @return string
+     */
+    public function readCode(): string
+    {
+        return file_get_contents($this->getPath());
+    }
+
+    /**
+     * Write code of the file to filesystem
+     *
+     * @return string
+     */
+    public function writeCode(string $entityCode): void
+    {
+        file_put_contents($this->getPath(), $entityCode);
     }
 }

@@ -4,10 +4,12 @@ namespace Info;
 
 use DOMDocument;
 use Info\Fields\FieldInfo;
+use Info\Fields\FunctionInfo;
 use Info\Fields\IdInfo;
 use Info\Relations\ManyToMany;
 use Info\Relations\ManyToOne;
 use Info\Relations\OneToMany;
+use Main\CodeFile;
 use Main\Output;
 use SimpleXMLElement;
 
@@ -27,6 +29,12 @@ class EntityOrmInfo
 
     /** @var FieldInfo[] */
     private array $fields = [];
+
+    /** @var CodeFile|null */
+    private ?CodeFile $codeFile = null;
+
+    /** @var FunctionInfo[] */
+    private array $functionsInfos = [];
 
     public function __construct(string $xml)
     {
@@ -53,8 +61,8 @@ class EntityOrmInfo
 
         if ($this->getHasLifecycleCallbacks()) {
             foreach ($entityInfo['lifecycle-callbacks'] as $lifecycleCallback) {
-                var_dump($lifecycleCallback);
-                die();
+                $functionInfo = new FunctionInfo($lifecycleCallback);
+                $this->addFunctionInfo($functionInfo);
             }
         }
 
@@ -167,7 +175,7 @@ class EntityOrmInfo
     }
 
     /**
-     * Set the value of fields
+     * Add a fild info to the value of fields
      *
      * @return  self
      */
@@ -176,6 +184,28 @@ class EntityOrmInfo
         $this->fields[] = $field;
 
         return $this;
+    }
+
+    /**
+     * Add function info
+     *
+     * @return  self
+     */
+    public function addFunctionInfo(FunctionInfo $functionInfo)
+    {
+        $this->functionsInfos[] = $functionInfo;
+
+        return $this;
+    }
+
+    /**
+     * Get function info
+     *
+     * @return  array
+     */
+    public function getFunctionsInfos(FunctionInfo $functionInfo)
+    {
+        return $this->functionsInfos;
     }
 
     public function __toString()
@@ -219,6 +249,26 @@ class EntityOrmInfo
     public function setHasLifecycleCallbacks($hasLifecycleCallbacks)
     {
         $this->hasLifecycleCallbacks = (bool) $hasLifecycleCallbacks;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of codeFile
+     */
+    public function getCodeFile(): ?CodeFile
+    {
+        return $this->codeFile;
+    }
+
+    /**
+     * Set the value of codeFile
+     *
+     * @return  self
+     */
+    public function setCodeFile(?CodeFile $codeFile)
+    {
+        $this->codeFile = $codeFile;
 
         return $this;
     }

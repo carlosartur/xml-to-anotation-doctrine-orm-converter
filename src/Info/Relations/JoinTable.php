@@ -9,7 +9,9 @@ use SimpleXMLElement;
 
 class JoinTable
 {
-    use AnnotationAttributesTrait;
+    use AnnotationAttributesTrait {
+        AnnotationAttributesTrait::getValueString as getValueStringScapingString;
+    }
 
     /** @var JoinColumn[] */
     protected array $joinColumnCollection = [];
@@ -23,6 +25,7 @@ class JoinTable
     /** @var string|null */
     protected ?string $reversedJoinColumns;
 
+    /** @var string */
     protected string $name;
 
     public function __construct(SimpleXMLElement $simpleXmlElement)
@@ -47,6 +50,11 @@ class JoinTable
         $this->buildJoins();
     }
 
+    /**
+     * Build information of joins
+     *
+     * @return void
+     */
     private function buildJoins(): void
     {
         $joinColumns = [];
@@ -64,5 +72,23 @@ class JoinTable
         }
         $joinColumns = implode(",", $reversedJoinColumns);
         $this->reversedJoinColumns = "{{$joinColumns}}";
+    }
+
+    /**
+     * Get annotation valid value to attribute
+     *
+     * @param [type] $value
+     * @return string|null
+     */
+    public function getValueString($value): ?string
+    {
+        if (
+            is_string($value)
+            && false !== stripos($value, '{@ORM\\')
+        ) {
+            return "{$value}";
+        }
+
+        return $this->getValueStringScapingString($value);
     }
 }

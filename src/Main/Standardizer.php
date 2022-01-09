@@ -92,10 +92,8 @@ class Standardizer
             }
 
             $classFile = new CodeFile($completeSubPath);
-            $this->classFiles[$completeSubPath] = $classFile;
+            $this->classFiles[$classFile->getFullQualifiedClassName()] = $classFile;
         }
-        var_dump($this);
-        die;
     }
 
 
@@ -114,13 +112,23 @@ class Standardizer
             $fileContent = file_get_contents($ormFile);
             $entityOrmInfo = new EntityOrmInfo($fileContent);
 
-            $entityCode = file_get_contents("{$this->path}/{$entityOrmInfo->getFilePath()}");
+            /** @var CodeFile $codeFile */
+            $codeFile = $this->classFiles[$entityOrmInfo->getEntityClassName()];
 
-            $entityCode = $this->updateFields($entityOrmInfo, $entityCode);
+            $entityOrmInfo->setCodeFile($codeFile);
 
-            $entityCode = $this->updateClassAttributes($entityOrmInfo, $entityCode);
+            $entityCode = $codeFile->readCode();
 
-            file_put_contents("{$this->path}/{$entityOrmInfo->getFilePath()}", $entityCode);
+            // $entityCode = $this->updateFields($entityOrmInfo, $entityCode);
+
+            // $entityCode = $this->updateClassAttributes($entityOrmInfo, $entityCode);
+
+            $entityCode = $this->updateFunctionAttributes($entityOrmInfo, $entityCode);
+
+            var_dump($entityCode);
+            die();
+
+            // $codeFile->writeCode($entityCode);
         }
     }
 
@@ -172,6 +180,21 @@ class Standardizer
                 . $entityFooter;
         }
         return $entityCode;
+    }
+
+    /**
+     * Add info to annotations of function
+     *
+     * @param EntityOrmInfo $entityOrmInfo
+     * @param string $entityCode
+     * @return string
+     */
+    private function updateFunctionAttributes(EntityOrmInfo $entityOrmInfo, string $entityCode): string
+    {
+        $codeFile = $entityOrmInfo->getCodeFile();
+        foreach ($entityOrmInfo->getFunctionsInfos() as $functionInfo) {}
+        var_dump(compact('codeFile', 'entityOrmInfo'));
+        exit;
     }
 
     /**
