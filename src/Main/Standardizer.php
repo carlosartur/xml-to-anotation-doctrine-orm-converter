@@ -4,6 +4,7 @@ namespace Main;
 
 use Exception;
 use Info\EntityOrmInfo;
+use stdClass;
 
 class Standardizer
 {
@@ -23,6 +24,8 @@ class Standardizer
     public function __construct(
         /** @var string $path - Path to project that you want to put on standards */
         private string $path = '',
+        /** @var array|null $config - Configurations of project */
+        private ?stdClass $config = null,
     ) {
         if (!strlen($this->path)) {
             throw new Exception("You must pass the path of the project you want to put on standards.");
@@ -37,6 +40,7 @@ class Standardizer
         }
 
         $this->buildTraitsAndClassesList();
+        $this->buildTraitsAndClassesCodeList();
         $this->buildXmlOrmFileList();
     }
 
@@ -87,7 +91,10 @@ class Standardizer
                 continue;
             }
 
-            if (false === stripos($completeSubPath, '.php')) {
+            $fileExtension = explode('.', $completeSubPath);
+            $fileExtension = array_pop($fileExtension);
+
+            if ('php' !== $fileExtension) {
                 continue;
             }
 
@@ -96,6 +103,40 @@ class Standardizer
         }
     }
 
+    /**
+     * Get code read by buildTraitsAndClassesList function to create tree of traits and classes
+     * 
+     * @see self::buildTraitsAndClassesList
+     *
+     * @return void
+     */
+    private function buildTraitsAndClassesCodeList()
+    {
+        $this->classFiles = array_filter(
+            $this->classFiles,
+            function (CodeFile $codeFile) {
+                if (!$codeFile->getIsClassOrTrait()) {
+                    return false;
+                }
+
+                foreach ($this->getIgnoredNamespaces() as $ignoredNamespace) {
+                    if (0 === stripos($codeFile->getFullQualifiedClassName(), $ignoredNamespace)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        );
+
+        /** @var CodeFile $classFile */
+        foreach ($this->classFiles as $classFile) {
+            $classFile->configureTraitsCodes($this->classFiles)
+                ->configureFatherClassCode($this->classFiles);
+        }
+        var_dump($this->classFiles);
+        die();
+    }
 
     /**
      * Executes Standardization
@@ -192,7 +233,8 @@ class Standardizer
     private function updateFunctionAttributes(EntityOrmInfo $entityOrmInfo, string $entityCode): string
     {
         $codeFile = $entityOrmInfo->getCodeFile();
-        foreach ($entityOrmInfo->getFunctionsInfos() as $functionInfo) {}
+        foreach ($entityOrmInfo->getFunctionsInfos() as $functionInfo) {
+        }
         var_dump(compact('codeFile', 'entityOrmInfo'));
         exit;
     }
@@ -219,5 +261,15 @@ class Standardizer
         }
 
         return $lineForProperty;
+    }
+
+    /**
+     * Get ignored namespaces on configurations
+     *
+     * @return array
+     */
+    public function getIgnoredNamespaces(): array
+    {
+        return $this->config?->namespaces_to_ignore ?? [];
     }
 }

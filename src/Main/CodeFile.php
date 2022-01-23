@@ -2,16 +2,18 @@
 
 namespace Main;
 
-class CodeFile
+use JsonSerializable;
+
+class CodeFile implements JsonSerializable
 {
     /** @var boolean */
     private bool $isClassOrTrait = false;
 
     /** @var string */
-    private string $namespace;
+    private ?string $namespace = "\\";
 
     /** @var string */
-    private string $className;
+    private ?string $className = "";
 
     /** @var string */
     private ?string $declarationClassLine = null;
@@ -33,6 +35,12 @@ class CodeFile
 
     /** @var int */
     private int $classDeclarationLineNumber = 0;
+
+    /** @var CodeFile|null */
+    private ?CodeFile $fatherClassCode = null;
+
+    /** @var CodeFile[] */
+    private array $traitsClassCode = [];
 
     public function __construct(
         private string $path
@@ -145,6 +153,7 @@ class CodeFile
             !$this->isClassOrTrait
             || false === stripos($this->declarationClassLine, ' extends ')
         ) {
+            $this->fatherClass = null;
             return $this;
         }
 
@@ -152,7 +161,11 @@ class CodeFile
         $extendsLineParts = explode(' ', array_pop($declarationClassLineParts));
 
         $fatherClass = array_shift($extendsLineParts);
-        $this->fatherClass = $this->imports[$fatherClass];
+        $fatherClass = $this->imports[$fatherClass] ?? "{$this->namespace}\\{$fatherClass}";
+
+        $fatherClass = explode(' ', $fatherClass);
+        $this->fatherClass = array_shift($fatherClass);
+
         return $this;
     }
 
@@ -167,7 +180,6 @@ class CodeFile
         return $this->fullQualifiedClassName;
     }
 
-
     /**
      * Get class or trait name
      *
@@ -181,6 +193,51 @@ class CodeFile
 
         $declarationClassLineParts = explode(' ', $this->declarationClassLine);
         $this->className = array_shift($declarationClassLineParts);
+        return $this;
+    }
+
+    /**
+     * Configure father class to get code. 
+     *
+     * @param array $listOfClasses
+     * @return self
+     */
+    public function configureFatherClassCode(array $listOfClasses): self
+    {
+        $this->fatherClassCode = $listOfClasses[$this->fatherClass] ?? null;
+        return $this;
+    }
+
+    /**
+     * Get code of father class. 
+     *
+     * @param array $listOfClasses
+     * @return void
+     */
+    public function getFatherClassCode(): ?CodeFile
+    {
+        if (!$this->fatherClassCode) {
+            return null;
+        }
+        return $this->fatherClassCode;
+    }
+
+    /**
+     * Configure the list of code of traits
+     *
+     * @param array $listOfClasses
+     * @return self
+     */
+    public function configureTraitsCodes(array $listOfClasses): self
+    {
+        foreach ($this->traits as $trait) {
+            $this->traitsClassCode[$trait] = $listOfClasses[$trait];
+        }
+        if ($this->traits) {
+            var_dump([$this->traits, $this->traitsClassCode]);
+            echo json_encode($listOfClasses, JSON_PRETTY_PRINT);
+            exit();
+        }
         return $this;
     }
 
@@ -302,5 +359,14 @@ class CodeFile
     public function writeCode(string $entityCode): void
     {
         file_put_contents($this->getPath(), $entityCode);
+    }
+
+    public function jsonSerialize()
+    {
+        $data = [];
+        foreach ($this as $prop => $value) {
+            $data[$prop] = $value;
+        }
+        return $data;
     }
 }
