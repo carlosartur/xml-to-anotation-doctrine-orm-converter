@@ -231,13 +231,13 @@ class CodeFile implements JsonSerializable
     public function configureTraitsCodes(array $listOfClasses): self
     {
         foreach ($this->traits as $trait) {
+            if (!array_key_exists($trait, $listOfClasses)) {
+                Logger::getInstance()->warning("Trait {$trait} not found on project.");
+                continue;
+            }
             $this->traitsClassCode[$trait] = $listOfClasses[$trait];
         }
-        if ($this->traits) {
-            var_dump([$this->traits, $this->traitsClassCode]);
-            echo json_encode($listOfClasses, JSON_PRETTY_PRINT);
-            exit();
-        }
+
         return $this;
     }
 

@@ -129,6 +129,8 @@ class Standardizer
             }
         );
 
+        Logger::getInstance()->info($this->classFiles);
+
         /** @var CodeFile $classFile */
         foreach ($this->classFiles as $classFile) {
             $classFile->configureTraitsCodes($this->classFiles)

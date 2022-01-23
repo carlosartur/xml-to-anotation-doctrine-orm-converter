@@ -1,25 +1,38 @@
 <?php
+
+namespace Main;
+
+use Exception;
+
 abstract class AbstractSingleton
 {
-    private static $instance;
+    /** @var static $instance - THE instance of this class */
+    protected static $instance;
 
     protected function __construct()
     {
     }
 
-    final protected function __clone()
+    final public function __clone()
     {
+        throw new Exception("Singleton objects must not be cloned");
     }
 
-    final protected function __wakeup()
+    final public function __wakeup()
     {
+        throw new Exception("Singleton objects must not be unserialized");
     }
 
+    /**
+     * Return the only instance of the object
+     *
+     * @return self
+     */
     public static function getInstance()
     {
-        if (self::$instance === null) {
-            self::$instance = new self;
+        if (static::$instance === null) {
+            static::$instance = new static();
         }
-        return self::$instance;
+        return static::$instance;
     }
 }

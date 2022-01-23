@@ -2,8 +2,8 @@
 
 namespace Main;
 
-use AbstractSingleton;
 use DateTime;
+use Main\AbstractSingleton;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Throwable;
@@ -24,14 +24,20 @@ class Logger extends AbstractSingleton implements LoggerInterface
     }
 
     /**
-     * Get file of log to write new log
+     * Get file of log to write new log. If file doesn't exists, create it.
      *
      * @return string
      */
     private function getLogPath(): string
     {
-        $dateFormated = $this->date->format("Y_m_d");
-        return __DIR__ . "/logs/{$dateFormated}.log";
+        $dateFormated = $this->date->format("Y_m_d_h_i_s");
+        $realPath = realpath(__DIR__ . "/../..");
+        $filename = "{$realPath}/logs/{$dateFormated}.log";
+        if (!file_exists($filename)) {
+            touch($filename);
+            chmod($filename, 0666);
+        }
+        return $filename;
     }
 
     /**
@@ -46,13 +52,20 @@ class Logger extends AbstractSingleton implements LoggerInterface
         string $level = LogLevel::INFO,
         array $context = []
     ): void {
-        $message = $this->getMessageLogString($message);
-        $context = $context
-            ? "context: " . $this->getMessageLogString($message) . PHP_EOL
-            : "";
-        $now = (new DateTime())->format("Y-m-d h:i:s");
-        $logPrefix = PHP_EOL . str_repeat("-", 150) .  PHP_EOL . "[{$now}]: {$level}" . PHP_EOL;
-        file_put_contents($this->getLogPath(), "{$logPrefix}{$context}{$message}");
+        try {
+            $message = $this->getMessageLogString($message);
+            $context = $context
+                ? "context: " . $this->getMessageLogString($message) . PHP_EOL
+                : "";
+            $now = (new DateTime())->format("Y-m-d h:i:s");
+            $logPrefix = PHP_EOL . str_repeat("-", 150) .  PHP_EOL . "[{$now}]: [{$level}]" . PHP_EOL;
+            $finalMessage = "{$logPrefix}{$context}{$message}";
+            // file_put_contents($this->getLogPath(), $finalMessage);
+            error_log($finalMessage, 3, $this->getLogPath());
+        } catch (Throwable $exception) {
+            var_dump($this->getMessageLogString($exception));
+            die();
+        }
     }
 
     /**
@@ -187,7 +200,7 @@ class Logger extends AbstractSingleton implements LoggerInterface
      */
     public function info($message, array $context = [])
     {
-        $this->writeLog($message, LogLevel::ALERT, $context);
+        $this->writeLog($message, LogLevel::INFO, $context);
     }
 
     /**
@@ -199,7 +212,7 @@ class Logger extends AbstractSingleton implements LoggerInterface
      */
     public function debug($message, array $context = [])
     {
-        $this->writeLog($message, LogLevel::ALERT, $context);
+        $this->writeLog($message, LogLevel::DEBUG, $context);
     }
 
     /**
@@ -212,6 +225,6 @@ class Logger extends AbstractSingleton implements LoggerInterface
      */
     public function log($level, $message, array $context = [])
     {
-        $this->writeLog($message, LogLevel::ALERT, $context);
+        $this->writeLog($message, $level, $context);
     }
 }
