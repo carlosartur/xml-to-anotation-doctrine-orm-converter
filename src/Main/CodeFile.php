@@ -86,11 +86,15 @@ class CodeFile implements JsonSerializable
                     $importName = array_pop($importName);
                 }
 
-                if ($lineNumber > $this->classDeclarationLineNumber) {
-                    $this->traits[$importName] = $import;
+                if (!array_key_exists($importName, $this->imports)) {
+                    $this->imports[$importName] = $import;
                 }
 
-                $this->imports[$importName] = $import;
+                if ($lineNumber > $this->classDeclarationLineNumber) {
+                    $this->traits[$importName] = array_key_exists($importName, $this->imports)
+                        ? $this->imports[$importName]
+                        : $import;
+                }
             }
         }
         return $this;
