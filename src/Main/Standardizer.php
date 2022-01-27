@@ -4,6 +4,7 @@ namespace Main;
 
 use Exception;
 use Info\EntityOrmInfo;
+use Info\Fields\FunctionInfo;
 use stdClass;
 
 class Standardizer
@@ -105,7 +106,7 @@ class Standardizer
 
     /**
      * Get code read by buildTraitsAndClassesList function to create tree of traits and classes
-     * 
+     *
      * @see self::buildTraitsAndClassesList
      *
      * @return void
@@ -136,8 +137,6 @@ class Standardizer
             $classFile->configureTraitsCodes($this->classFiles)
                 ->configureFatherClassCode($this->classFiles);
         }
-        var_dump($this->classFiles);
-        die();
     }
 
     /**
@@ -235,11 +234,83 @@ class Standardizer
     private function updateFunctionAttributes(EntityOrmInfo $entityOrmInfo, string $entityCode): string
     {
         $codeFile = $entityOrmInfo->getCodeFile();
+        /** @var FunctionInfo $functionInfo */
         foreach ($entityOrmInfo->getFunctionsInfos() as $functionInfo) {
+            $entityCode = $this->entityClassFunctionInfo($functionInfo, $codeFile, $entityCode);
         }
         var_dump(compact('codeFile', 'entityOrmInfo'));
         exit;
     }
+
+    /**
+     * Update function to add info about
+     *
+     * @return void
+     */
+    private function entityClassFunctionInfo(
+        FunctionInfo $functionInfo,
+        CodeFile $codeFile,
+        string $entityCode
+    ): string {
+        if (preg_match_all($functionInfo->getAccessibleFunctionRegex(), $entityCode)) {
+            var_dump($functionInfo->getAccessibleFunctionRegex(), $entityCode);
+            die();
+            return $entityCode;
+        }
+
+        /** @var CodeFile $traitClassCode */
+        foreach ($codeFile->getTraitsClassCode() as $traitClassCode) {
+            if ($this->entityTraitFunctionInfo($functionInfo, $traitClassCode)) {
+
+            }
+        }
+
+        Logger::getInstance()->info([
+            'regex' => $functionInfo->getAccessibleFunctionRegex(),
+            'readCode' => $codeFile->readCode()
+        ]);
+        die();
+
+        if ($codeFile->getFatherClassCode()) {
+            $this->entityParentClassFunctionInfo($functionInfo, $codeFile->getFatherClassCode());
+            return $entityCode;
+        }
+
+    }
+
+    /**
+     *
+     *
+     * @param FunctionInfo $functionInfo
+     * @param CodeFile $codeFile
+     * @return void
+     */
+    private function entityParentClassFunctionInfo(FunctionInfo $functionInfo, CodeFile $codeFile)
+    {
+
+    }
+
+    /**
+     *
+     *
+     * @param FunctionInfo $functionInfo
+     * @param CodeFile $codeFile
+     * @return void
+     */
+    private function entityTraitFunctionInfo(FunctionInfo $functionInfo, CodeFile $codeFile): bool
+    {
+        $traitCode = $codeFile->readCode();
+        if (!preg_match_all($functionInfo->getAccessibleFunctionRegex(), $traitCode)) {
+            return false;
+        }
+        var_dump([
+            'regex' => $functionInfo->getAccessibleFunctionRegex(),
+            'readCode' => explode(PHP_EOL, $traitCode)
+        ]);
+        die();
+        return true;
+    }
+
 
     /**
      * Find line to add property.

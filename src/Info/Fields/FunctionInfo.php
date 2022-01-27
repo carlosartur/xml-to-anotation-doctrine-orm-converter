@@ -28,7 +28,7 @@ class FunctionInfo
      */
     public function getAccessibleFunctionRegex(): string
     {
-        return "/(public|protected)\\s{0,}function\\s{0,}{$this->method}\\s/";
+        return "/(public|protected)\\s{0,}function\\s{0,}{$this->method}\\s{0,}\(/";
     }
 
     /**

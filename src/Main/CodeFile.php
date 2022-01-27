@@ -201,7 +201,7 @@ class CodeFile implements JsonSerializable
     }
 
     /**
-     * Configure father class to get code. 
+     * Configure father class to get code.
      *
      * @param array $listOfClasses
      * @return self
@@ -213,10 +213,10 @@ class CodeFile implements JsonSerializable
     }
 
     /**
-     * Get code of father class. 
+     * Get code of father class.
      *
      * @param array $listOfClasses
-     * @return void
+     * @return CodeFile|null
      */
     public function getFatherClassCode(): ?CodeFile
     {
@@ -372,5 +372,15 @@ class CodeFile implements JsonSerializable
             $data[$prop] = $value;
         }
         return $data;
+    }
+
+    /**
+     * Get the value of traitsClassCode
+     *
+     * @return  array
+     */
+    public function getTraitsClassCode()
+    {
+        return $this->traitsClassCode;
     }
 }

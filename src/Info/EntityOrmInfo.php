@@ -10,8 +10,6 @@ use Info\Relations\ManyToMany;
 use Info\Relations\ManyToOne;
 use Info\Relations\OneToMany;
 use Main\CodeFile;
-use Main\Output;
-use SimpleXMLElement;
 
 class EntityOrmInfo
 {
@@ -44,8 +42,8 @@ class EntityOrmInfo
     }
 
     /**
-     * 
-     * 
+     *
+     *
      * @param DOMDocument $dom
      * @return void
      */
@@ -100,6 +98,10 @@ class EntityOrmInfo
      */
     public static function getElementsArray(array $entityInfo, string $name): array
     {
+        if (!array_key_exists($name, $entityInfo)) {
+            return [];
+        }
+
         if (!is_array($entityInfo[$name])) {
             return [$entityInfo[$name]];
         }
@@ -203,7 +205,7 @@ class EntityOrmInfo
      *
      * @return  array
      */
-    public function getFunctionsInfos(FunctionInfo $functionInfo)
+    public function getFunctionsInfos(): array
     {
         return $this->functionsInfos;
     }
