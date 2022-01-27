@@ -28,7 +28,7 @@ class FunctionInfo
      */
     public function getAccessibleFunctionRegex(): string
     {
-        return "/(public|protected)\\s{0,}function\\s{0,}{$this->method}\\s{0,}\(/";
+        return "/\s{0,}(public|protected)\\s{0,}function\\s{0,}{$this->method}\\s{0,}\(/";
     }
 
     /**
@@ -38,9 +38,11 @@ class FunctionInfo
      */
     public function getDocRegex(): string
     {
-        return '#\/\*\*(((.)+\n{0,})|(\n){0,}(.+\n))\s{0,}\*\/(?=\n\s{0,}((public|protected)\s{0,}function\s{0,}'
-            . $this->method
-            . '\W))#';
+        return "#\/\*\*(((.)+\n*)|(\n)*(.+\n))\s*\*\/(?=(public|protected)\\s{0,}function\\s{0,}{$this->method}\\s{0,}\\()#mi";
+
+        // return '#\/\*\*((?:(?!\*).)*)\*(?:(?!\*\*).)*(?=(public|protected)\s{0,}function\s{0,}'
+        //     . $this->method
+        //     . '\s{0,}\()#mi';
     }
 
     /**

@@ -300,13 +300,26 @@ class Standardizer
     private function entityTraitFunctionInfo(FunctionInfo $functionInfo, CodeFile $codeFile): bool
     {
         $traitCode = $codeFile->readCode();
-        if (!preg_match_all($functionInfo->getAccessibleFunctionRegex(), $traitCode)) {
+        $functionDeclarationMatches = [];
+        if (!preg_match_all($functionInfo->getAccessibleFunctionRegex(), $traitCode, $functionDeclarationMatches)) {
             return false;
         }
-        var_dump([
-            'regex' => $functionInfo->getAccessibleFunctionRegex(),
-            'readCode' => explode(PHP_EOL, $traitCode)
-        ]);
+
+        $functionDocMatches = [];
+        $numberOfMatches = preg_match($functionInfo->getDocRegex(), $traitCode, $functionDocMatches);
+        // var_dump([$numberOfMatches, $functionInfo->getDocRegex(), $traitCode, $functionDocMatches]);
+        die(json_encode([$numberOfMatches, $functionInfo->getDocRegex(), $traitCode, $functionDocMatches]));
+        if (!$numberOfMatches) {
+            $functionDeclarationLine = str_replace(PHP_EOL, '', $functionDeclarationMatches[0][0]);
+            $functionDoc = "/**
+     * {$functionInfo->getType()}
+     */";
+            $functionDeclarationLineWithDoc = $functionDoc . PHP_EOL . $functionDeclarationLine;
+            $newTraitCode = str_replace($functionDeclarationLine, $functionDeclarationLineWithDoc, $traitCode);
+
+            $codeFile->writeCode($newTraitCode);
+            return true;
+        }
         die();
         return true;
     }
