@@ -3,6 +3,8 @@
 namespace Info;
 
 use DOMDocument;
+use Info\ConstraintsAndIndexes\Index;
+use Info\ConstraintsAndIndexes\UniqueConstraint;
 use Info\Fields\FieldInfo;
 use Info\Fields\FunctionInfo;
 use Info\Fields\IdInfo;
@@ -34,6 +36,12 @@ class EntityOrmInfo
     /** @var FunctionInfo[] */
     private array $functionsInfos = [];
 
+    /** @var Index[] */
+    private array $indexes = [];
+
+    /** @var UniqueConstraint[] */
+    private array $uniqueConstraints = [];
+
     public function __construct(string $xml)
     {
         $dom = new DOMDocument();
@@ -56,6 +64,20 @@ class EntityOrmInfo
             ->setTable($entityInfo['@attributes']['table'])
             ->setRepositoryClass($entityInfo['@attributes']['repository-class'])
             ->setHasLifecycleCallbacks($entityInfo['lifecycle-callbacks'] ?? null);
+
+        foreach (self::getElementsArray($entityInfo, 'indexes') as $indexes) {
+            foreach (self::getElementsArray((array) $indexes, 'index') as $index) {
+                $index = new Index($index);
+                $this->addIndex($index);
+            }
+        }
+
+        foreach (self::getElementsArray($entityInfo, 'unique-constraints') as $UniqueConstraint) {
+            foreach (self::getElementsArray((array) $UniqueConstraint, 'unique-constraint') as $uniqueConstraint) {
+                $uniqueConstraint = new UniqueConstraint($uniqueConstraint);
+                $this->addUniqueConstraint($uniqueConstraint);
+            }
+        }
 
         if ($this->getHasLifecycleCallbacks()) {
             foreach ($entityInfo['lifecycle-callbacks'] as $lifecycleCallback) {
@@ -177,13 +199,53 @@ class EntityOrmInfo
     }
 
     /**
-     * Add a fild info to the value of fields
+     * Add a field info to the value of fields
      *
      * @return  self
      */
     public function addField(FieldInfo $field)
     {
         $this->fields[] = $field;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Indexes
+     */
+    public function getIndexes()
+    {
+        return $this->indexes;
+    }
+
+    /**
+     * Add a Index info to the value of Indexes
+     *
+     * @return  self
+     */
+    public function addIndex(Index $index)
+    {
+        $this->indexes[] = $index;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of uniqueConstraints
+     */
+    public function getUniqueConstraints()
+    {
+        return $this->uniqueConstraints;
+    }
+
+    /**
+     * Add a UniqueConstraint info to the value of UniqueConstraints
+     *
+     * @return  self
+     */
+    public function addUniqueConstraint(UniqueConstraint $uniqueConstraint)
+    {
+        $this->uniqueConstraints[] = $uniqueConstraint;
 
         return $this;
     }
@@ -212,9 +274,32 @@ class EntityOrmInfo
 
     public function __toString()
     {
+        $tableExtraInfo = "";
+        if ($this->getUniqueConstraints()) {
+            $uniqueConstraintsString = [];
+            foreach ($this->getUniqueConstraints() as $uniqueConstraint) {
+                $uniqueConstraintsString[] = (string) $uniqueConstraint;
+            }
+            $tableExtraInfo .= ",
+            *    uniqueConstraints={"
+                . implode(",", $uniqueConstraintsString)
+                . ")}";
+        }
+
+        if ($this->getIndexes()) {
+            $indexesString = [];
+            foreach ($this->getIndexes() as $index) {
+                $indexesString[] = (string) $index;
+            }
+            $tableExtraInfo .= ",
+            *    indexes={"
+                . implode(",", $indexesString)
+                . ")}";
+        }
+
         return "/**
  * @ORM\Entity
- * @ORM\Table(name=\"{$this->table}\")
+ * @ORM\Table(name=\"{$this->table}\"{$tableExtraInfo})
  * @ORM\Entity(repositoryClass=\"{$this->repositoryClass}\")
  */";
     }

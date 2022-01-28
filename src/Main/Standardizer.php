@@ -163,16 +163,16 @@ class Standardizer
 
             $entityCode = $codeFile->readCode();
 
-            // $entityCode = $this->updateFields($entityOrmInfo, $entityCode);
-
-            // $entityCode = $this->updateClassAttributes($entityOrmInfo, $entityCode);
-
             $entityCode = $this->updateFunctionAttributes($entityOrmInfo, $entityCode);
 
+            // $entityCode = $this->updateFields($entityOrmInfo, $entityCode);
+
+            $entityCode = $this->updateClassAttributes($entityOrmInfo, $entityCode);
+
+
+            $codeFile->writeCode($entityCode);
             var_dump($entityCode);
             die();
-
-            // $codeFile->writeCode($entityCode);
         }
     }
 
