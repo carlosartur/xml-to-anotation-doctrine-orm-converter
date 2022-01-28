@@ -338,7 +338,12 @@ class Standardizer
             . PHP_EOL
             . implode(PHP_EOL, $functionDocLines);
 
-        $finalClassCode = preg_replace($functionInfo->getDocRegex(), $functionFinalDoc, $classCode);
+        $finalClassCode = preg_replace(
+            $functionInfo->getDocRegex(),
+            $functionFinalDoc,
+            $classCode,
+            1
+        );
         $codeFile->writeCode($finalClassCode);
 
         return true;
