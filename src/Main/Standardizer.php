@@ -326,6 +326,10 @@ class Standardizer
         }
 
         $functionDoc = array_shift($functionDocMatches);
+        if (preg_match($functionInfo->getTypeRegex(), $functionDoc)) {
+            return true;
+        }
+
         $functionDocLines = explode(PHP_EOL, $functionDoc);
         do {
             $docPiece = array_shift($functionDocLines);
