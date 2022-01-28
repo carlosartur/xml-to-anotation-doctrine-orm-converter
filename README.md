@@ -10,7 +10,6 @@ This is a zero-dependency project
 ### Todo
 - indexes
 - field options
-- lifecycle-callbacks
 - unique-constraints
 - relations: cascade
 
