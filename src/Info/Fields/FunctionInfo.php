@@ -38,11 +38,9 @@ class FunctionInfo
      */
     public function getDocRegex(): string
     {
-        return "#\/\*\*(((.)+\n*)|(\n)*(.+\n))\s*\*\/(?=(public|protected)\\s{0,}function\\s{0,}{$this->method}\\s{0,}\\()#mi";
-
-        // return '#\/\*\*((?:(?!\*).)*)\*(?:(?!\*\*).)*(?=(public|protected)\s{0,}function\s{0,}'
-        //     . $this->method
-        //     . '\s{0,}\()#mi';
+        return '#(\/*\s*\*.*)*\s*(?=(public|protected)\s*function\s*'
+            . $this->method
+            . '\s*\()#';
     }
 
     /**
@@ -53,7 +51,7 @@ class FunctionInfo
     public function getTypeRegex(): string
     {
         $type = ucfirst($this->type);
-        return '/\@ORM\\' . $type;
+        return '#@ORM\\\\' . $type . "#";
     }
 
     /**
@@ -64,6 +62,6 @@ class FunctionInfo
     public function getType(): string
     {
         $type = ucfirst($this->type);
-        return '@ORM\\' . $type;
+        return "@ORM\\{$type}";
     }
 }

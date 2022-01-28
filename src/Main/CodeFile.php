@@ -201,7 +201,7 @@ class CodeFile implements JsonSerializable
     }
 
     /**
-     * Configure father class to get code.
+     * Configure father class to get code. 
      *
      * @param array $listOfClasses
      * @return self
@@ -213,7 +213,7 @@ class CodeFile implements JsonSerializable
     }
 
     /**
-     * Get code of father class.
+     * Get code of father class. 
      *
      * @param array $listOfClasses
      * @return CodeFile|null
@@ -365,6 +365,11 @@ class CodeFile implements JsonSerializable
         file_put_contents($this->getPath(), $entityCode);
     }
 
+    /**
+     * Function call on json_encode
+     *
+     * @return void
+     */
     public function jsonSerialize()
     {
         $data = [];

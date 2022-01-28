@@ -9,6 +9,8 @@ use stdClass;
 
 class Standardizer
 {
+    private const DOC_START = "/**";
+
     /** @var string[] */
     private array $ormFiles;
 
@@ -238,8 +240,7 @@ class Standardizer
         foreach ($entityOrmInfo->getFunctionsInfos() as $functionInfo) {
             $entityCode = $this->entityClassFunctionInfo($functionInfo, $codeFile, $entityCode);
         }
-        var_dump(compact('codeFile', 'entityOrmInfo'));
-        exit;
+        return $entityCode;
     }
 
     /**
@@ -252,30 +253,47 @@ class Standardizer
         CodeFile $codeFile,
         string $entityCode
     ): string {
-        if (preg_match_all($functionInfo->getAccessibleFunctionRegex(), $entityCode)) {
-            var_dump($functionInfo->getAccessibleFunctionRegex(), $entityCode);
-            die();
-            return $entityCode;
+        if (
+            preg_match_all($functionInfo->getAccessibleFunctionRegex(), $entityCode)
+            && $this->writeFunctionCallbackInfo($functionInfo, $codeFile)
+        ) {
+            return $codeFile->readCode();
         }
 
         /** @var CodeFile $traitClassCode */
         foreach ($codeFile->getTraitsClassCode() as $traitClassCode) {
-            if ($this->entityTraitFunctionInfo($functionInfo, $traitClassCode)) {
-
+            if ($this->writeFunctionCallbackInfo($functionInfo, $traitClassCode)) {
+                return $codeFile->readCode();
             }
         }
 
-        Logger::getInstance()->info([
-            'regex' => $functionInfo->getAccessibleFunctionRegex(),
-            'readCode' => $codeFile->readCode()
-        ]);
-        die();
+        if (
+            $codeFile->getFatherClassCode()
+            && $this->entityParentClassFunctionInfo($functionInfo, $codeFile->getFatherClassCode())
+        ) {
+            return $codeFile->readCode();
+        }
+        return $entityCode;
+    }
 
-        if ($codeFile->getFatherClassCode()) {
-            $this->entityParentClassFunctionInfo($functionInfo, $codeFile->getFatherClassCode());
-            return $entityCode;
+    /**
+     *
+     *
+     * @param FunctionInfo $functionInfo
+     * @param CodeFile $codeFile
+     * @return void
+     */
+    private function entityParentClassFunctionInfo(FunctionInfo $functionInfo, CodeFile $codeFile): bool
+    {
+        if ($this->writeFunctionCallbackInfo($functionInfo, $codeFile)) {
+            return true;
         }
 
+        if (!$codeFile->getFatherClassCode()) {
+            return false;
+        }
+
+        return $this->entityParentClassFunctionInfo($functionInfo, $codeFile->getFatherClassCode());
     }
 
     /**
@@ -285,42 +303,44 @@ class Standardizer
      * @param CodeFile $codeFile
      * @return void
      */
-    private function entityParentClassFunctionInfo(FunctionInfo $functionInfo, CodeFile $codeFile)
+    private function writeFunctionCallbackInfo(FunctionInfo $functionInfo, CodeFile $codeFile): bool
     {
-
-    }
-
-    /**
-     *
-     *
-     * @param FunctionInfo $functionInfo
-     * @param CodeFile $codeFile
-     * @return void
-     */
-    private function entityTraitFunctionInfo(FunctionInfo $functionInfo, CodeFile $codeFile): bool
-    {
-        $traitCode = $codeFile->readCode();
+        $classCode = $codeFile->readCode();
         $functionDeclarationMatches = [];
-        if (!preg_match_all($functionInfo->getAccessibleFunctionRegex(), $traitCode, $functionDeclarationMatches)) {
+        if (!preg_match_all($functionInfo->getAccessibleFunctionRegex(), $classCode, $functionDeclarationMatches)) {
             return false;
         }
 
         $functionDocMatches = [];
-        $numberOfMatches = preg_match($functionInfo->getDocRegex(), $traitCode, $functionDocMatches);
-        // var_dump([$numberOfMatches, $functionInfo->getDocRegex(), $traitCode, $functionDocMatches]);
-        die(json_encode([$numberOfMatches, $functionInfo->getDocRegex(), $traitCode, $functionDocMatches]));
+        $numberOfMatches = preg_match($functionInfo->getDocRegex(), $classCode, $functionDocMatches);
         if (!$numberOfMatches) {
             $functionDeclarationLine = str_replace(PHP_EOL, '', $functionDeclarationMatches[0][0]);
             $functionDoc = "/**
      * {$functionInfo->getType()}
      */";
             $functionDeclarationLineWithDoc = $functionDoc . PHP_EOL . $functionDeclarationLine;
-            $newTraitCode = str_replace($functionDeclarationLine, $functionDeclarationLineWithDoc, $traitCode);
+            $newclassCode = str_replace($functionDeclarationLine, $functionDeclarationLineWithDoc, $classCode);
 
-            $codeFile->writeCode($newTraitCode);
+            $codeFile->writeCode($newclassCode);
             return true;
         }
-        die();
+
+        $functionDoc = array_shift($functionDocMatches);
+        $functionDocLines = explode(PHP_EOL, $functionDoc);
+        do {
+            $docPiece = array_shift($functionDocLines);
+        } while (false === stripos($docPiece, self::DOC_START));
+
+        $indentation = str_repeat(" ", strlen($functionDocLines[0]) - strlen(ltrim($functionDocLines[0])));
+        $functionFinalDoc = self::DOC_START
+            . PHP_EOL
+            . "{$indentation}* {$functionInfo->getType()}"
+            . PHP_EOL
+            . implode(PHP_EOL, $functionDocLines);
+
+        $finalClassCode = preg_replace($functionInfo->getDocRegex(), $functionFinalDoc, $classCode);
+        $codeFile->writeCode($finalClassCode);
+
         return true;
     }
 
