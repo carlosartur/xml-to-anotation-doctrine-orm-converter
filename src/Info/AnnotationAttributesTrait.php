@@ -2,6 +2,7 @@
 
 namespace Info;
 
+use Closure;
 use ReflectionClass;
 
 trait AnnotationAttributesTrait
@@ -19,6 +20,13 @@ trait AnnotationAttributesTrait
      * @var array
      */
     public $paramsJsonArray = [];
+
+    /**
+     * This array has the custom functions to get correct format of a value
+     *
+     * @var Closure[]
+     */
+    public $customCallbackToGetValue = [];
 
     /**
      * Serialize a object using annotation parameters, like example above:
@@ -54,6 +62,14 @@ trait AnnotationAttributesTrait
                 && count($value)
             ) {
                 $extraOptsString[] = "{$attribute}=" . json_encode($value);
+                continue;
+            }
+
+            if (array_key_exists($attribute, $this->customCallbackToGetValue)) {
+                /** @var Closure */
+                $closure = $this->customCallbackToGetValue[$attribute];
+                $extraOptString = "{$attribute}=" . $closure($value);
+                $extraOptsString[] = $extraOptString;
                 continue;
             }
 

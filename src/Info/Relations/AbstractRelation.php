@@ -20,6 +20,9 @@ abstract class AbstractRelation extends FieldInfo
     /** @var JoinColumn|null $joinColumn */
     protected ?JoinColumn $joinColumn = null;
 
+    /** @var string[] $cascade */
+    protected array $cascade = [];
+
     public function __construct(SimpleXMLElement $simpleXmlElement)
     {
         $this->buildParamsNotIncludedArray();
@@ -34,6 +37,34 @@ abstract class AbstractRelation extends FieldInfo
 
         if (isset($simpleXmlElement['join-column'])) {
             $this->joinColumn = new JoinColumn($simpleXmlElement['join-column']);
+        }
+
+        if (isset($simpleXmlElement['cascade'])) {
+            $this->buildCascades($simpleXmlElement['cascade']);
+        }
+
+        $this->customCallbackToGetValue['cascade'] = function (array $value): string {
+            if (!count($value)) {
+                return "";
+            }
+            return str_replace(
+                ["[", "]"],
+                ["{", "}"],
+                json_encode($value)
+            );
+        };
+    }
+
+    /**
+     * Build cascade for entity
+     *
+     * @param SimpleXMLElement $simpleXmlElement
+     * @return void
+     */
+    private function buildCascades(SimpleXMLElement $simpleXmlElement): void
+    {
+        foreach (array_keys((array)$simpleXmlElement) as $cascade) {
+            $this->cascade[] = str_replace("cascade-", "", $cascade);
         }
     }
 

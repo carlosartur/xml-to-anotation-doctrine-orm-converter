@@ -169,10 +169,7 @@ class Standardizer
 
             $entityCode = $this->updateClassAttributes($entityOrmInfo, $entityCode);
 
-
             $codeFile->writeCode($entityCode);
-            var_dump($entityCode);
-            die();
         }
     }
 
