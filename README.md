@@ -8,7 +8,6 @@ This script reads all files inside a directory or a specific file and converts X
 This is a zero-dependency project
 
 ### Todo
-- field options
 - relations: cascade
 
 ### License

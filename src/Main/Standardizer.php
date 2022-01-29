@@ -165,7 +165,7 @@ class Standardizer
 
             $entityCode = $this->updateFunctionAttributes($entityOrmInfo, $entityCode);
 
-            // $entityCode = $this->updateFields($entityOrmInfo, $entityCode);
+            $entityCode = $this->updateFields($entityOrmInfo, $entityCode);
 
             $entityCode = $this->updateClassAttributes($entityOrmInfo, $entityCode);
 

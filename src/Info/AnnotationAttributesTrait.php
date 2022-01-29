@@ -14,6 +14,13 @@ trait AnnotationAttributesTrait
     public $paramsNotIncluded = [];
 
     /**
+     * This array must have class attribute arrays that will be included as json strings
+     *
+     * @var array
+     */
+    public $paramsJsonArray = [];
+
+    /**
      * Serialize a object using annotation parameters, like example above:
      * 
      * class Example 
@@ -41,6 +48,15 @@ trait AnnotationAttributesTrait
     {
         $extraOptsString = [];
         foreach ($this as $attribute => $value) {
+            if (
+                in_array($attribute, $this->paramsJsonArray)
+                && is_array($value)
+                && count($value)
+            ) {
+                $extraOptsString[] = "{$attribute}=" . json_encode($value);
+                continue;
+            }
+
             if (
                 in_array($attribute, $this->paramsNotIncluded)
                 || !is_scalar($value)

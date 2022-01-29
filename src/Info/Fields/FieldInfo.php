@@ -33,10 +33,22 @@ class FieldInfo
     /** @var int $scale */
     protected ?int $scale = 0;
 
+    /** @var array $options */
+    protected array $options = [];
+
     public function __construct(SimpleXMLElement $simpleXMLElement)
     {
-        $fieldInfo = (array) $simpleXMLElement;
-        $fieldInfo = $fieldInfo['@attributes'];
+        $this->paramsJsonArray[] = "options";
+        
+        $fieldInfoContainer = (array) $simpleXMLElement;
+        $fieldInfo = $fieldInfoContainer['@attributes'];
+        $fieldOptions = array_key_exists("options", $fieldInfoContainer)
+            ? $simpleXMLElement->options
+            : null;
+
+        if ($fieldOptions) {
+            $this->fillOptions($fieldOptions);
+        }
 
         $this->name = $fieldInfo['name'];
         $this->column = $fieldInfo['column'];
@@ -55,6 +67,38 @@ class FieldInfo
         $this->nullable = isset($fieldInfo['nullable'])
             ? filter_var($fieldInfo['nullable'], FILTER_VALIDATE_BOOL)
             : null;
+    }
+
+    /**
+     * Use options on xml to build options to field.
+     * Unfortunately, SimpleXMLElement::attributes doesn't work here, so it uses
+     * string logic to do that.
+     *
+     * @param SimpleXMLElement $fieldOptions
+     * @return void
+     */
+    public function fillOptions(SimpleXMLElement $fieldOptions)
+    {
+        $optionsString = str_replace(
+            ['<options>', '</options>'],
+            '',
+            $fieldOptions->asXML()
+        );
+
+        $options = array_filter(
+            explode('<option ', $optionsString),
+            fn ($item) => (bool) strlen(trim($item))
+        );
+
+        foreach ($options as $option) {
+            $option = str_replace('</option>', '', $option);
+            $keyValue = explode(">", $option);
+            $value = trim(array_pop($keyValue));
+            $key = str_replace(['name=', '"'], '', array_shift($keyValue));
+
+            $value = json_decode($value);
+            $this->options[$key] = $value;
+        }
     }
 
     public function getAnnotationClassName(): string
