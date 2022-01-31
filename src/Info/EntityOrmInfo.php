@@ -21,8 +21,8 @@ class EntityOrmInfo
     /** @var string $table */
     private string $table;
 
-    /** @var string $repositoryClass */
-    private string $repositoryClass;
+    /** @var null|string $repositoryClass */
+    private ?string $repositoryClass;
 
     /** @var bool $hasLifecycleCallbacks */
     private bool $hasLifecycleCallbacks = false;
@@ -60,9 +60,15 @@ class EntityOrmInfo
         $entityInfo = simplexml_import_dom($dom);
         $entityInfo = (array) $entityInfo->entity;
 
+        $table = $entityInfo['@attributes']['table'] ?? false;
+        if ($table) {
+            $entityNamespace = explode("\\", $entityInfo['@attributes']['name']);
+            $table = array_pop($entityNamespace);
+        }
+
         $this->setEntityClassName($entityInfo['@attributes']['name'])
-            ->setTable($entityInfo['@attributes']['table'])
-            ->setRepositoryClass($entityInfo['@attributes']['repository-class'])
+            ->setTable($table)
+            ->setRepositoryClass($entityInfo['@attributes']['repository-class'] ?? null)
             ->setHasLifecycleCallbacks($entityInfo['lifecycle-callbacks'] ?? null);
 
         foreach (self::getElementsArray($entityInfo, 'indexes') as $indexes) {
@@ -183,7 +189,7 @@ class EntityOrmInfo
      *
      * @return  self
      */
-    public function setRepositoryClass(string $repositoryClass): self
+    public function setRepositoryClass(?string $repositoryClass): self
     {
         $this->repositoryClass = $repositoryClass;
 
@@ -297,10 +303,14 @@ class EntityOrmInfo
                 . ")}";
         }
 
+        $repositoryClass = "";
+        if ($this->repositoryClass) {
+            $repositoryClass = "(repositoryClass=\"{$this->repositoryClass}\")";
+        }
+
         return "/**
- * @ORM\Entity
+ * @ORM\Entity{$repositoryClass}
  * @ORM\Table(name=\"{$this->table}\"{$tableExtraInfo})
- * @ORM\Entity(repositoryClass=\"{$this->repositoryClass}\")
  */";
     }
 

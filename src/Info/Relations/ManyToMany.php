@@ -3,27 +3,39 @@
 namespace Info\Relations;
 
 use SimpleXMLElement;
+use Throwable;
 
 class ManyToMany extends AbstractRelation
 {
-    /** @var JoinTable $joinTable */
-    private JoinTable $joinTable;
+    /** @var null|JoinTable $joinTable */
+    private ?JoinTable $joinTable = null;
 
     public function __construct(SimpleXMLElement $simpleXmlElement)
     {
-        parent::__construct($simpleXmlElement);
-        $simpleXmlElement = (array) $simpleXmlElement;
+        try {
+            parent::__construct($simpleXmlElement);
+            $simpleXmlElement = (array) $simpleXmlElement;
 
-        $this->joinTable = new JoinTable($simpleXmlElement["join-table"]);
-
-        echo $this;
+            if (array_key_exists("join-table", $simpleXmlElement)) {
+                $this->joinTable = new JoinTable($simpleXmlElement["join-table"]);
+            }
+        } catch (Throwable $exception) {
+            print_r(compact('simpleXMLElement', 'exception'));
+            die();
+        }
     }
 
     public function __toString(): string
     {
+        $joinTableSerialized = "";
+        if ($this->joinTable) {
+            $joinTableSerialized = "
+            * {$this->joinTable->serializeAnnotation()}
+            ";
+        }
+
         return "/**
-     * {$this->serializeAnnotation()}
-     * {$this->joinTable->serializeAnnotation()}
+     * {$this->serializeAnnotation()}{$joinTableSerialized}
      */";
     }
 }

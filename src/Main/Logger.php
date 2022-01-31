@@ -60,7 +60,6 @@ class Logger extends AbstractSingleton implements LoggerInterface
             $now = (new DateTime())->format("Y-m-d h:i:s");
             $logPrefix = PHP_EOL . str_repeat("-", 150) .  PHP_EOL . "[{$now}]: [{$level}]" . PHP_EOL;
             $finalMessage = "{$logPrefix}{$context}{$message}";
-            // file_put_contents($this->getLogPath(), $finalMessage);
             error_log($finalMessage, 3, $this->getLogPath());
         } catch (Throwable $exception) {
             var_dump($this->getMessageLogString($exception));

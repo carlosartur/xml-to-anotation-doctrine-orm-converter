@@ -150,26 +150,42 @@ class Standardizer
     {
         $totalFiles = count($this->ormFiles);
         foreach ($this->ormFiles as $key => $ormFile) {
-            $numberFile = $key + 1;
-            Output::info("File #{$numberFile} of {$totalFiles} file name: {$ormFile}");
+            try {
+                $numberFile = $key + 1;
 
-            $fileContent = file_get_contents($ormFile);
-            $entityOrmInfo = new EntityOrmInfo($fileContent);
+                $message = "File #{$numberFile} of {$totalFiles} file name: {$ormFile}";
+                Output::info($message);
+                Logger::getInstance()->info($message);
 
-            /** @var CodeFile $codeFile */
-            $codeFile = $this->classFiles[$entityOrmInfo->getEntityClassName()];
+                $fileContent = file_get_contents($ormFile);
+                $entityOrmInfo = new EntityOrmInfo($fileContent);
 
-            $entityOrmInfo->setCodeFile($codeFile);
+                /** @var CodeFile $codeFile */
+                $codeFile = $this->classFiles[$entityOrmInfo->getEntityClassName()];
 
-            $entityCode = $codeFile->readCode();
+                $entityOrmInfo->setCodeFile($codeFile);
 
-            $entityCode = $this->updateFunctionAttributes($entityOrmInfo, $entityCode);
+                $entityCode = $codeFile->readCode();
 
-            $entityCode = $this->updateFields($entityOrmInfo, $entityCode);
+                Logger::getInstance()->info("updateFunctionAttributes");
+                $entityCode = $this->updateFunctionAttributes($entityOrmInfo, $entityCode);
 
-            $entityCode = $this->updateClassAttributes($entityOrmInfo, $entityCode);
+                Logger::getInstance()->info("updateFields");
+                $entityCode = $this->updateFields($entityOrmInfo, $entityCode);
 
-            $codeFile->writeCode($entityCode);
+                Logger::getInstance()->info("updateClassAttributes");
+                $entityCode = $this->updateClassAttributes($entityOrmInfo, $entityCode);
+
+                $codeFile->writeCode($entityCode);
+
+                $message = "{$ormFile} success!";
+                Output::success($message);
+                Logger::getInstance()->info($message);
+            } catch(Exception $exception) {
+                $message = "{$ormFile} error!" . PHP_EOL . print_r($exception, true);
+                Output::error($message);
+                Logger::getInstance()->critical(print_r($exception));
+            }
         }
     }
 
@@ -330,7 +346,11 @@ class Standardizer
         $functionDocLines = explode(PHP_EOL, $functionDoc);
         do {
             $docPiece = array_shift($functionDocLines);
-        } while (false === stripos($docPiece, self::DOC_START));
+        } while (false === stripos($docPiece, self::DOC_START) && count($functionDocLines));
+
+        if (!count($functionDocLines)) {
+            return false;
+        }
 
         $indentation = str_repeat(" ", strlen($functionDocLines[0]) - strlen(ltrim($functionDocLines[0])));
         $functionFinalDoc = self::DOC_START

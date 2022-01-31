@@ -4,6 +4,7 @@ namespace Info\Fields;
 
 use Info\AnnotationAttributesTrait;
 use SimpleXMLElement;
+use Throwable;
 
 class FieldInfo
 {
@@ -38,35 +39,41 @@ class FieldInfo
 
     public function __construct(SimpleXMLElement $simpleXMLElement)
     {
-        $this->paramsJsonArray[] = "options";
-        
-        $fieldInfoContainer = (array) $simpleXMLElement;
-        $fieldInfo = $fieldInfoContainer['@attributes'];
-        $fieldOptions = array_key_exists("options", $fieldInfoContainer)
-            ? $simpleXMLElement->options
-            : null;
+        try{
+            $this->paramsJsonArray[] = "options";
 
-        if ($fieldOptions) {
-            $this->fillOptions($fieldOptions);
+            $fieldInfoContainer = (array) $simpleXMLElement;
+            $fieldInfo = $fieldInfoContainer['@attributes'];
+            $fieldOptions = array_key_exists("options", $fieldInfoContainer)
+                ? $simpleXMLElement->options
+                : null;
+
+            if ($fieldOptions) {
+                $this->fillOptions($fieldOptions);
+            }
+
+            $this->name = $fieldInfo['name'];
+            $this->column = $fieldInfo['column'] ?? $fieldInfo['name'];
+            $this->type = $fieldInfo['type'] ?? 'string';
+            $this->scale = $fieldInfo['scale'] ?? null;
+            $this->precision = $fieldInfo['precision'] ?? null;
+
+            $this->length = isset($fieldInfo['length'])
+                ? (int) $fieldInfo['length']
+                : null;
+
+            $this->unique = isset($fieldInfo['unique'])
+                ? filter_var($fieldInfo['unique'], FILTER_VALIDATE_BOOL)
+                : null;
+
+            $this->nullable = isset($fieldInfo['nullable'])
+                ? filter_var($fieldInfo['nullable'], FILTER_VALIDATE_BOOL)
+                : null;
+        } catch (Throwable $exception) {
+            print_r(compact('simpleXMLElement', 'exception'));
+            die();
         }
 
-        $this->name = $fieldInfo['name'];
-        $this->column = $fieldInfo['column'];
-        $this->type = $fieldInfo['type'] ?? null;
-        $this->scale = $fieldInfo['scale'] ?? null;
-        $this->precision = $fieldInfo['precision'] ?? null;
-
-        $this->length = isset($fieldInfo['length'])
-            ? (int) $fieldInfo['length']
-            : null;
-
-        $this->unique = isset($fieldInfo['unique'])
-            ? filter_var($fieldInfo['unique'], FILTER_VALIDATE_BOOL)
-            : null;
-
-        $this->nullable = isset($fieldInfo['nullable'])
-            ? filter_var($fieldInfo['nullable'], FILTER_VALIDATE_BOOL)
-            : null;
     }
 
     /**
