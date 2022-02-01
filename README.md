@@ -7,8 +7,5 @@ This script reads all files inside a directory or a specific file and converts X
 ### Dependencies
 This is a zero-dependency project
 
-### Todo
-- relations: cascade
-
 ### License
 [WTFPL](http://www.wtfpl.net/)
