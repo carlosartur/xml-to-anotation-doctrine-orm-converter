@@ -30,8 +30,8 @@ trait AnnotationAttributesTrait
 
     /**
      * Serialize a object using annotation parameters, like example above:
-     * 
-     * class Example 
+     *
+     * class Example
      * {
      *     use AnnotationAttributesTrait;
      *     private string $attrString;
@@ -49,7 +49,7 @@ trait AnnotationAttributesTrait
      * }
      * $example = new Example('foo', true, 3.14, 'not included');
      * echo $example; // prints 'attrString="foo", attrBool=true, attrFloat=3.14'
-     * 
+     *
      * @return string
      */
     public function getValuesString(): string
@@ -68,8 +68,12 @@ trait AnnotationAttributesTrait
             if (array_key_exists($attribute, $this->customCallbackToGetValue)) {
                 /** @var Closure */
                 $closure = $this->customCallbackToGetValue[$attribute];
-                $extraOptString = "{$attribute}=" . $closure($value);
-                $extraOptsString[] = $extraOptString;
+
+                $resultOfClosure = $closure($value);
+                if ($resultOfClosure) {
+                    $extraOptString = "{$attribute}=" . $closure($value);
+                    $extraOptsString[] = $extraOptString;
+                }
                 continue;
             }
 

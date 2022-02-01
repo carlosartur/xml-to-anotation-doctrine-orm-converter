@@ -35,7 +35,16 @@ class ManyToMany extends AbstractRelation
         }
 
         return "/**
+     * @var {$this->getValueType()} \${$this->name}
      * {$this->serializeAnnotation()}{$joinTableSerialized}
      */";
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getValueType(): string
+    {
+        return "{$this->targetEntity}[]";
     }
 }

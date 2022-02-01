@@ -77,6 +77,28 @@ class FieldInfo
     }
 
     /**
+     * Get value to field docs
+     *
+     * @return string
+     */
+    protected function getValueType(): string
+    {
+        $valueType = "";
+        if (false !== $this->nullable) {
+            $valueType = "null|";
+        }
+
+        if ('integer' === $this->type) {
+            return "{$valueType}int";
+        }
+
+        if ('boolean' === $this->type) {
+            return "{$valueType}bool";
+        }
+        return "{$valueType}{$this->type}";
+    }
+
+    /**
      * Use options on xml to build options to field.
      * Unfortunately, SimpleXMLElement::attributes doesn't work here, so it uses
      * string logic to do that.
@@ -116,6 +138,7 @@ class FieldInfo
     public function __toString(): string
     {
         return "/**
+     * @var {$this->getValueType()} \${$this->getName()}
      * {$this->serializeAnnotation()}
      */";
     }
@@ -132,7 +155,7 @@ class FieldInfo
 
     public function buildClassProperty(): string
     {
-        return "\n    " . $this . "\n    private \$" . $this->getName() . ';';
+        return "\n    " . $this . "\n    protected \$" . $this->getName() . ';';
     }
 
     /**

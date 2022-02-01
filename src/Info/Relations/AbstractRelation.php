@@ -90,15 +90,25 @@ abstract class AbstractRelation extends FieldInfo
         }
     }
 
+    /**
+     * @inheritDoc
+     */
+    protected function getValueType(): string
+    {
+        return "{$this->targetEntity}";
+    }
+
     public function __toString(): string
     {
         if (!$this->joinColumn) {
             return "/**
+     * @var {$this->getValueType()} \${$this->getName()}
      * {$this->serializeAnnotation()}
      */";
         }
 
         return "/**
+     * @var {$this->getValueType()} \${$this->getName()}
      * {$this->serializeAnnotation()}
      * {$this->joinColumn->serializeAnnotation()}
      */";
